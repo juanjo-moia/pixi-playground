@@ -1,4 +1,4 @@
-import { Application, Container, Sprite, Texture } from 'pixi.js';
+import { Application, Container, ParticleContainer, Sprite, Texture } from 'pixi.js';
 
 const WIDTH = 400;
 const HEIGHT = 300;
@@ -28,6 +28,30 @@ bgContainer.addChild(nightBg)
 bgContainer.width = dayBg.width = nightBg.width = WIDTH;
 bgContainer.height = dayBg.height = nightBg.height = HEIGHT;
 
+/** stars **/
+const COUNT_STARS = 1000;
+const starSprites = new ParticleContainer(COUNT_STARS, {
+  uvs: true,
+  alpha: true,
+  scale: true,
+  position: true,
+});
+starSprites.alpha = 0;
+app.stage.addChild(starSprites);
+
+const stars = [];
+
+for (let i = 0; i < COUNT_STARS; i++) {
+  const star = Sprite.from('/assets/star.png');
+  star.anchor.set(0.5);
+  star.scale.set(Math.random() * 0.02);
+  star.x = Math.random() * WIDTH;
+  star.y = Math.random() * HEIGHT;
+  star.alpha = Math.random();
+  stars.push(star);
+  starSprites.addChild(star)
+}
+
 /** rocket */
 const rocket = Sprite.from('assets/rocket.png');
 app.stage.addChild(rocket);
@@ -42,4 +66,5 @@ app.ticker.add((dt) => {
   rocket.position.set(x2, y2);
 
   nightBg.alpha += 0.003 * dt;
+  starSprites.alpha += 0.003 * dt;
 });
