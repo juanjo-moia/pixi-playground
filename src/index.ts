@@ -53,11 +53,11 @@ for (let i = 0; i < COUNT_STARS; i++) {
 }
 
 /** rocket */
-const rocket = Sprite.from('assets/rocket.png');
+const rocket = Sprite.from('assets/rocket-off.png');
 app.stage.addChild(rocket);
 rocket.position.set(WIDTH / 2 - rocket.width / 2, HEIGHT + rocket.height);
 rocket.width = 64;
-rocket.height = 64;
+rocket.height = 128;
 
 const ROCKET_SPEED = 1;
 
