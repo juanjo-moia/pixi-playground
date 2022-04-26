@@ -21,3 +21,5 @@ cdk.out
 
 # IDE settings
 .vscode
+
+package-lock.json
