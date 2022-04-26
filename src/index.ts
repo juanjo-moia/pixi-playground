@@ -56,7 +56,7 @@ for (let i = 0; i < COUNT_STARS; i++) {
 const rocket = Sprite.from('assets/rocket.png');
 app.stage.addChild(rocket);
 rocket.position.set(WIDTH / 2 - rocket.width / 2, HEIGHT + rocket.height);
-rocket.width = 32;
+rocket.width = 64;
 rocket.height = 64;
 
 const ROCKET_SPEED = 1;
