@@ -3,7 +3,8 @@
   "display": "Node 16 + Strictest",
   "compilerOptions": {
     "lib": ["es2021", "DOM"],
-    "module": "commonjs",
+    "module": "es2022",
+    "moduleResolution": "node",
     "target": "es2021",
     "strict": true,
     "esModuleInterop": true,
