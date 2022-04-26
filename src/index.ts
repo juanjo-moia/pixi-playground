@@ -39,7 +39,7 @@ const starSprites = new ParticleContainer(COUNT_STARS, {
 starSprites.alpha = 0;
 app.stage.addChild(starSprites);
 
-const stars = [];
+const stars:Array<Sprite> = [];
 
 for (let i = 0; i < COUNT_STARS; i++) {
   const star = Sprite.from('/assets/star.png');
@@ -60,11 +60,24 @@ rocket.width = 32;
 rocket.height = 64;
 
 const ROCKET_SPEED = 1;
+
 app.ticker.add((dt) => {
+  //rocket anim
   const x2 = rocket.position.x;
   const y2 = rocket.position.y - ROCKET_SPEED * dt;
   rocket.position.set(x2, y2);
+  
+  //bg anim
+  nightBg.alpha <1 ? nightBg.alpha += 0.003 * dt : 1;
+  starSprites.alpha <1 ? starSprites.alpha += 0.003 * dt : 1;
 
-  nightBg.alpha += 0.003 * dt;
-  starSprites.alpha += 0.003 * dt;
+  //star anim
+  for (let i = 0; i < stars.length; i++) {
+    const star = stars[i];
+    if(star) {
+      star.alpha = star.alpha > 0 ? star.alpha - 0.0002 : Math.random() + 0.01;
+    }
+  }
 });
+
+// setTimeout(() => app.ticker.stop(), 10000);
