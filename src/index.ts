@@ -1,7 +1,14 @@
-import { Application, Container, ParticleContainer, Sprite, Texture } from 'pixi.js';
+import {
+  Application,
+  Container,
+  Loader,
+  ParticleContainer,
+  Sprite,
+  Texture,
+} from 'pixi.js';
 
-const WIDTH = 400;
-const HEIGHT = 300;
+const WIDTH = 4096 / 4;
+const HEIGHT = 4096 / 4;
 const BG_COLOR = 0x1099bb;
 
 const app = new Application({
@@ -12,21 +19,25 @@ const app = new Application({
 });
 document.body.appendChild(app.view);
 
-/** background **/
-const bgContainer = new Container();
-app.stage.addChild(bgContainer);
+// Scene
+const resources: any = await new Promise((res) =>
+  Loader.shared
+    .add('bg_no_fire', 'assets/bg-no-fire.png')
+    .add('bg_fire_medium', 'assets/bg-fire-medium.png')
+    .add('bg_fire_max', 'assets/bg-fire-max.png')
+    .add('rocket', 'assets/rocket-off.png')
+    .add('star', 'assets/star.png')
+    .load((_, r) => res(r)),
+);
 
-const dayBg = new Sprite(Texture.WHITE);
-dayBg.tint = 0x03a9f4;
-bgContainer.addChild(dayBg)
+const scene = new Container();
+app.stage.addChild(scene);
 
 const nightBg = new Sprite(Texture.WHITE);
 nightBg.tint = 0x02163b;
-nightBg.alpha = 0;
-bgContainer.addChild(nightBg)
-
-bgContainer.width = dayBg.width = nightBg.width = WIDTH;
-bgContainer.height = dayBg.height = nightBg.height = HEIGHT;
+nightBg.width = WIDTH;
+nightBg.height = HEIGHT;
+scene.addChild(nightBg);
 
 /** stars **/
 const COUNT_STARS = 1000;
@@ -37,47 +48,47 @@ const starSprites = new ParticleContainer(COUNT_STARS, {
   position: true,
 });
 starSprites.alpha = 0;
-app.stage.addChild(starSprites);
-
-const stars:Array<Sprite> = [];
-
 for (let i = 0; i < COUNT_STARS; i++) {
-  const star = Sprite.from('/assets/star.png');
+  const star = new Sprite(resources.star.texture);
   star.anchor.set(0.5);
   star.scale.set(Math.random() * 0.02);
   star.x = Math.random() * WIDTH;
   star.y = Math.random() * HEIGHT;
   star.alpha = Math.random();
-  stars.push(star);
-  starSprites.addChild(star)
+  starSprites.addChild(star);
 }
+function fadeInStars(dt: number) {
+  starSprites.alpha < 1 ? (starSprites.alpha += 0.003 * dt) : 1;
+}
+function twinkleStars(_: number) {
+  for (const star of starSprites.children) {
+    star.alpha = star.alpha > 0 ? star.alpha - 0.0002 : Math.random() + 0.01;
+  }
+}
+scene.addChild(starSprites);
+
+const skylineTexture = resources.bg_no_fire.texture;
+const skyline = new Sprite(skylineTexture);
+skyline.scale.set(WIDTH / skylineTexture.width);
+skyline.y = WIDTH - skyline.height;
+scene.addChild(skyline);
 
 /** rocket */
-const rocket = Sprite.from('assets/rocket-off.png');
+const rocket = new Sprite(resources.rocket.texture);
+const ROCKET_SPEED = 1;
 app.stage.addChild(rocket);
-rocket.position.set(WIDTH / 2 - rocket.width / 2, HEIGHT + rocket.height);
 rocket.width = 64;
 rocket.height = 128;
+rocket.position.set(WIDTH / 2 - rocket.width / 2, HEIGHT + rocket.height);
 
-const ROCKET_SPEED = 1;
-
-app.ticker.add((dt) => {
-  //rocket anim
+function flyRocket(dt: number) {
   const x2 = rocket.position.x;
   const y2 = rocket.position.y - ROCKET_SPEED * dt;
   rocket.position.set(x2, y2);
-  
-  //bg anim
-  nightBg.alpha <1 ? nightBg.alpha += 0.003 * dt : 1;
-  starSprites.alpha <1 ? starSprites.alpha += 0.003 * dt : 1;
+}
 
-  //star anim
-  for (let i = 0; i < stars.length; i++) {
-    const star = stars[i];
-    if(star) {
-      star.alpha = star.alpha > 0 ? star.alpha - 0.0002 : Math.random() + 0.01;
-    }
-  }
+app.ticker.add((dt) => {
+  flyRocket(dt);
+  fadeInStars(dt);
+  twinkleStars(dt);
 });
-
-// setTimeout(() => app.ticker.stop(), 10000);
