@@ -22,4 +22,7 @@ cdk.out
 # IDE settings
 .vscode
 
+# IDEA
+.idea
+
 package-lock.json
