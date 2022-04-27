@@ -6,6 +6,7 @@ import {
   Sprite,
   Texture,
 } from 'pixi.js';
+import { gsap } from 'gsap';
 
 const WIDTH = 4096 / 4;
 const HEIGHT = 4096 / 4;
@@ -18,6 +19,16 @@ const app = new Application({
   resolution: window.devicePixelRatio || 1,
   sharedLoader: true,
 });
+
+// We stop Pixi ticker using stop() function because autoStart = false does NOT stop the shared ticker:
+// doc: http://pixijs.download/release/docs/PIXI.Application.html
+app.ticker.stop();
+
+// Now, we use 'tick' from gsap
+gsap.ticker.add(() => {
+  app.ticker.update();
+});
+
 document.body.appendChild(app.view);
 
 // Scene
@@ -26,7 +37,7 @@ const resources: any = await new Promise((res) =>
     .add('bg_no_fire', 'assets/bg-no-fire.png')
     .add('bg_fire_medium', 'assets/bg-fire-medium.png')
     .add('bg_fire_max', 'assets/bg-fire-max.png')
-    .add('rocket', 'assets/rocket-off.png')
+    .add('rocket', 'assets/spritesheet.json')
     .add('star', 'assets/star.png')
     .load((_, r) => res(r)),
 );
@@ -74,22 +85,30 @@ skyline.scale.set(WIDTH / skylineTexture.width);
 skyline.y = WIDTH - skyline.height;
 scene.addChild(skyline);
 
-/** rocket */
-const rocket = new Sprite(resources.rocket.texture);
-const ROCKET_SPEED = 1;
-app.stage.addChild(rocket);
-rocket.width = 64;
-rocket.height = 128;
-rocket.position.set(WIDTH / 2 - rocket.width / 2, HEIGHT + rocket.height);
+function launchRocket() {
+  const rocket = new Sprite(resources.rocket.textures.off);
+  app.stage.addChild(rocket);
 
-function flyRocket(dt: number) {
-  const x2 = rocket.position.x;
-  const y2 = rocket.position.y - ROCKET_SPEED * dt;
-  rocket.position.set(x2, y2);
+  rocket.scale.set(0.25, 0.25);
+  rocket.position.set(Math.random() * WIDTH, HEIGHT - rocket.height);
+
+  const tl = gsap.timeline({ delay: 2 });
+  tl.fromTo(
+    rocket,
+    { x: (_i, r) => r.x - 10, yoyo: true, repeat: -1, duration: 0.1 },
+    { x: (_i, r) => r.x + 10, yoyo: true, repeat: -1, duration: 0.1 },
+  );
+  tl.to(
+    rocket,
+    { texture: resources.rocket.textures.on_air, duration: 0 },
+    '+2',
+  );
+  tl.to(rocket, { y: -rocket.height, duration: 3 });
 }
 
+launchRocket();
+
 app.ticker.add((dt) => {
-  flyRocket(dt);
   fadeInStars(dt);
   twinkleStars(dt);
 });
