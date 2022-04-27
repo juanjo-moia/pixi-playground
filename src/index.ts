@@ -87,12 +87,16 @@ skyline.scale.set(WIDTH / skylineTexture.width);
 skyline.y = WIDTH - skyline.height;
 scene.addChild(skyline);
 
+const GROUND_OFFSET = (skylineTexture.height - 1936) * skyline.scale.y;
+const LAUNCH_POINT_X = 1700 * skyline.scale.x;
+
 function launchRocket() {
   const rocket = new Sprite(resources.rocket.textures.off);
   app.stage.addChild(rocket);
 
+  rocket.anchor.set(0.5);
   rocket.scale.set(0.25, 0.25);
-  rocket.position.set(Math.random() * WIDTH, HEIGHT - rocket.height);
+  rocket.position.set(LAUNCH_POINT_X, HEIGHT - GROUND_OFFSET);
 
   const tl = gsap.timeline({ delay: 2 });
   tl.fromTo(
