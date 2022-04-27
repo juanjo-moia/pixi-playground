@@ -159,9 +159,9 @@ scene.addChild(skyline);
 //easter egg area
 const hitArea = new Graphics();
 hitArea.interactive = true;
-hitArea.beginFill(0xff0000);
+hitArea.beginFill(0xfff);
 hitArea.drawCircle(0, 0, 20);
-hitArea.alpha = 0;
+hitArea.alpha = 0.05;
 hitArea.x = 425;
 hitArea.y = 245;
 app.stage.addChild(hitArea);
