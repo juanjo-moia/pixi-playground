@@ -11,6 +11,8 @@ const WIDTH = 4096 / 4;
 const HEIGHT = 4096 / 4;
 const BG_COLOR = 0x1099bb;
 
+const POLL_INTERVAL = 5000; // in milliseconds
+
 const app = new Application({
   width: WIDTH,
   height: HEIGHT,
@@ -86,6 +88,12 @@ function flyRocket(dt: number) {
   const y2 = rocket.position.y - ROCKET_SPEED * dt;
   rocket.position.set(x2, y2);
 }
+
+window.setInterval(() => {
+  fetch('https://api.rockets.dev.moia-group.io/484750723/stats').then((res) => {
+    console.log(res);
+  })
+}, POLL_INTERVAL)
 
 app.ticker.add((dt) => {
   flyRocket(dt);
