@@ -1,7 +1,6 @@
 import {
   Application,
   Container,
-  Loader,
   ParticleContainer,
   Sprite,
   Texture,
@@ -58,7 +57,6 @@ scene.addChild(nightBg);
 /** statsbox **/
 const textContainer = new Container();
 scene.addChild(textContainer)
-const textHeadline = new Text('MOIA rocktes launched');
 const textHeadlineStyle = new TextStyle({
   fontFamily: 'Arial',
   fontSize: 12,
@@ -74,30 +72,35 @@ const textHeadlineStyle = new TextStyle({
   wordWrapWidth: 440,
   lineJoin: 'round',
 });
+const textHeadline = new Text('MOIA rockets launched');
 textHeadline.x = 0;
 textHeadline.y = 0;
 textHeadline.style = textHeadlineStyle;
 
-const textSuccess = new Text('Success:');
-const textSuccessStyle = new TextStyle({
+const textStatsStyle = new TextStyle({
   fontFamily: 'Arial',
-  fontSize: 12,
+  fontSize: 10,
   fill: ['#fff']
 })
+const textSuccess = new Text('Success:');
 textSuccess.x = 0;
 textSuccess.y = 20;
-textSuccess.style = textSuccessStyle;
+textSuccess.style = textStatsStyle;
+const textFailure = new Text('Failure:');
+textFailure.x = 0;
+textFailure.y = 35;
+textFailure.style = textStatsStyle;
 
 textContainer.addChild(textHeadline);
 textContainer.addChild(textSuccess);
+textContainer.addChild(textFailure);
 textContainer.x = WIDTH - 300;
 textContainer.y = 30;
 
-const updateStatsText = (numberOfSuccess = 0) => {
-  textSuccess.text = `Success: ${numberOfSuccess}`
+const updateStatsText = ({success, failure}: {success: number, failure: number}) => {
+  textSuccess.text = `Success: ${success}`;
+  textFailure.text = `Failure: ${failure}`;
 }
-
-updateStatsText(1)
 
 /** stars **/
 const COUNT_STARS = 1000;
@@ -158,16 +161,25 @@ function launchRocket() {
   tl.to(rocket, { y: -rocket.height, duration: 3 });
 }
 
-launchRocket();
-
-app.ticker.add((dt) => {
-  fadeInStars(dt);
-  twinkleStars(dt);
-});
-
-setInterval(async () => {
+const getStats = async () => {
   const res = await fetch('https://7am002ml7h.execute-api.eu-central-1.amazonaws.com/dev/repositories/484750723/stats');
-  const text = await res.text()
+  const data = await res.json()
+  updateStatsText(data);
+}
 
-  console.log(JSON.parse(text));
+const initInterval = () => setInterval(async () => {
+  getStats();
 }, POLL_INTERVAL)
+
+const initPixiWorld = () => {
+  app.ticker.add((dt) => {
+    fadeInStars(dt);
+    twinkleStars(dt);
+  });
+  
+  launchRocket();
+  getStats();
+  initInterval();
+}
+
+initPixiWorld();
