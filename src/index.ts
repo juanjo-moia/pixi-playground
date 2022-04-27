@@ -161,13 +161,26 @@ function launchRocket() {
   tl.to(rocket, { y: -rocket.height, duration: 3 });
 }
 
+const fetchLastStatusAndUpdate = async () => {
+  const res = await fetch('https://7am002ml7h.execute-api.eu-central-1.amazonaws.com/dev/events')
+  const result = JSON.parse(await res.text())
+  const events = result.events
+  events.sort((a: any, b: any) => a.statusAt > b.statusAt)
+
+  const lastEvent = events[0]
+  const lastStatus = lastEvent.status
+
+  console.log(lastStatus)
+}
+
 const getStats = async () => {
   const res = await fetch('https://7am002ml7h.execute-api.eu-central-1.amazonaws.com/dev/repositories/484750723/stats');
   const data = await res.json()
   updateStatsText(data);
 }
 
-const initInterval = () => setInterval(async () => {
+const initInterval = () => setInterval(() => {
+  fetchLastStatusAndUpdate();
   getStats();
 }, POLL_INTERVAL)
 
