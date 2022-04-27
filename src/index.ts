@@ -142,48 +142,55 @@ skyline.scale.set(WIDTH / skylineTexture.width);
 skyline.y = WIDTH - skyline.height;
 scene.addChild(skyline);
 
-const LAUNCH_POINT_Y = (skylineTexture.height - 1936) * skyline.scale.y;
+const LAUNCH_POINT_Y =
+  HEIGHT - (skylineTexture.height - 1936) * skyline.scale.y;
 const LAUNCH_POINT_X = 1700 * skyline.scale.x;
 
 const rocket = new Sprite(resources.rocket.textures.off);
 rocket.anchor.set(0.5);
 rocket.scale = skyline.scale;
-
+rocket.position.set(LAUNCH_POINT_X, LAUNCH_POINT_Y);
+const rocketShakeTimeline = gsap
+  .timeline({ paused: true })
+  .fromTo(
+    rocket,
+    { x: (_i, r) => r.x - 10, yoyo: true, repeat: -1, duration: 0.1 },
+    { x: (_i, r) => r.x + 10, yoyo: true, repeat: -1, duration: 0.1 },
+  );
+const rocketLaunchTimeline = gsap
+  .timeline({ paused: true })
+  .to(rocket, {
+    x: LAUNCH_POINT_X,
+    y: LAUNCH_POINT_Y,
+    texture: resources.rocket.textures.on_ground,
+    duration: 0,
+  })
+  .to(skyline, { texture: resources.bg_fire_medium.texture, duration: 0 })
+  .to(rocket, { y: LAUNCH_POINT_Y, duration: 0.5 })
+  .to(skyline, { texture: resources.bg_fire_max.texture, duration: 0 })
+  .to(rocket, { texture: resources.rocket.textures.on_air, duration: 0 })
+  .to(rocket, { y: -rocket.height, duration: 3 })
+  .to(skyline, { texture: resources.bg_fire_medium.texture, duration: 0 }, 0.6)
+  .to(skyline, { texture: resources.bg_no_fire.texture, duration: 0 }, 0.7);
 app.stage.addChild(rocket);
 
 function rocketReady() {
-  rocket.position.set(LAUNCH_POINT_X, HEIGHT - LAUNCH_POINT_Y);
+  rocketShakeTimeline.pause();
+  rocketShakeTimeline.seek(0);
+  rocketLaunchTimeline.pause();
+  rocketLaunchTimeline.seek(0);
   rocket.texture = resources.rocket.textures.off;
   skyline.texture = resources.bg_no_fire.texture;
 }
 
 function rocketFiring() {
-  const tl = gsap.timeline();
-  tl.to(rocket, { texture: resources.rocket.textures.on_ground, duration: 0 });
-  tl.to(skyline, {
-    texture: resources.bg_fire_medium.texture,
-    duration: 0,
-  });
-  tl.fromTo(
-    rocket,
-    { x: (_i, r) => r.x - 10, yoyo: true, repeat: -1, duration: 0.1 },
-    { x: (_i, r) => r.x + 10, yoyo: true, repeat: -1, duration: 0.1 },
-  );
+  rocketShakeTimeline.play();
+  rocketLaunchTimeline.seek(0.4);
 }
 
 function rocketLaunch() {
-  const tl = gsap.timeline();
-  tl.fromTo(
-    rocket,
-    { x: (_i, r) => r.x - 10, yoyo: true, repeat: -1, duration: 0.1 },
-    { x: (_i, r) => r.x + 10, yoyo: true, repeat: -1, duration: 0.1 },
-  );
-  tl.to(
-    rocket,
-    { texture: resources.rocket.textures.on_air, duration: 0 },
-    '+2',
-  );
-  tl.to(rocket, { y: -rocket.height, duration: 3 });
+  rocketShakeTimeline.play();
+  rocketLaunchTimeline.play();
 }
 
 function sleep(ms: number) {
