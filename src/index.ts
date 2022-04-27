@@ -204,9 +204,8 @@ const fetchLastStatusAndUpdate = async () => {
   const res = await fetch('https://7am002ml7h.execute-api.eu-central-1.amazonaws.com/dev/events')
   const result = JSON.parse(await res.text())
   const events = result.events
-  events.sort((a: any, b: any) => a.statusAt > b.statusAt)
 
-  const lastEvent = events[0]
+  const lastEvent = events[events.length - 1]
   const lastStatus = lastEvent.status
 
   if (lastLaunchStatus != lastStatus) {
