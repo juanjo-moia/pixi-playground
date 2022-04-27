@@ -16,12 +16,13 @@ const app = new Application({
   height: HEIGHT,
   backgroundColor: BG_COLOR,
   resolution: window.devicePixelRatio || 1,
+  sharedLoader: true,
 });
 document.body.appendChild(app.view);
 
 // Scene
 const resources: any = await new Promise((res) =>
-  Loader.shared
+  app.loader
     .add('bg_no_fire', 'assets/bg-no-fire.png')
     .add('bg_fire_medium', 'assets/bg-fire-medium.png')
     .add('bg_fire_max', 'assets/bg-fire-max.png')
