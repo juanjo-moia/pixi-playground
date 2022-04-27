@@ -5,7 +5,7 @@ import {
   Sprite,
   Texture,
   Text,
-  TextStyle
+  TextStyle,
 } from 'pixi.js';
 import { gsap } from 'gsap';
 
@@ -56,7 +56,7 @@ scene.addChild(nightBg);
 
 /** statsbox **/
 const textContainer = new Container();
-scene.addChild(textContainer)
+scene.addChild(textContainer);
 const textHeadlineStyle = new TextStyle({
   fontFamily: 'Arial',
   fontSize: 12,
@@ -80,8 +80,8 @@ textHeadline.style = textHeadlineStyle;
 const textStatsStyle = new TextStyle({
   fontFamily: 'Arial',
   fontSize: 10,
-  fill: ['#fff']
-})
+  fill: ['#fff'],
+});
 const textSuccess = new Text('Success:');
 textSuccess.x = 0;
 textSuccess.y = 20;
@@ -97,10 +97,16 @@ textContainer.addChild(textFailure);
 textContainer.x = WIDTH - 300;
 textContainer.y = 30;
 
-const updateStatsText = ({success, failure}: {success: number, failure: number}) => {
+const updateStatsText = ({
+  success,
+  failure,
+}: {
+  success: number;
+  failure: number;
+}) => {
   textSuccess.text = `Success: ${success}`;
   textFailure.text = `Failure: ${failure}`;
-}
+};
 
 /** stars **/
 const COUNT_STARS = 1000;
@@ -136,18 +142,37 @@ skyline.scale.set(WIDTH / skylineTexture.width);
 skyline.y = WIDTH - skyline.height;
 scene.addChild(skyline);
 
-const GROUND_OFFSET = (skylineTexture.height - 1936) * skyline.scale.y;
+const LAUNCH_POINT_Y = (skylineTexture.height - 1936) * skyline.scale.y;
 const LAUNCH_POINT_X = 1700 * skyline.scale.x;
 
-function launchRocket() {
-  const rocket = new Sprite(resources.rocket.textures.off);
-  app.stage.addChild(rocket);
+const rocket = new Sprite(resources.rocket.textures.off);
+rocket.anchor.set(0.5);
+rocket.scale = skyline.scale;
 
-  rocket.anchor.set(0.5);
-  rocket.scale.set(0.25, 0.25);
-  rocket.position.set(LAUNCH_POINT_X, HEIGHT - GROUND_OFFSET);
+app.stage.addChild(rocket);
 
-  const tl = gsap.timeline({ delay: 2 });
+function rocketReady() {
+  rocket.position.set(LAUNCH_POINT_X, HEIGHT - LAUNCH_POINT_Y);
+  rocket.texture = resources.rocket.textures.off;
+  skyline.texture = resources.bg_no_fire.texture;
+}
+
+function rocketFiring() {
+  const tl = gsap.timeline();
+  tl.to(rocket, { texture: resources.rocket.textures.on_ground, duration: 0 });
+  tl.to(skyline, {
+    texture: resources.bg_fire_medium.texture,
+    duration: 0,
+  });
+  tl.fromTo(
+    rocket,
+    { x: (_i, r) => r.x - 10, yoyo: true, repeat: -1, duration: 0.1 },
+    { x: (_i, r) => r.x + 10, yoyo: true, repeat: -1, duration: 0.1 },
+  );
+}
+
+function rocketLaunch() {
+  const tl = gsap.timeline();
   tl.fromTo(
     rocket,
     { x: (_i, r) => r.x - 10, yoyo: true, repeat: -1, duration: 0.1 },
@@ -161,25 +186,42 @@ function launchRocket() {
   tl.to(rocket, { y: -rocket.height, duration: 3 });
 }
 
-const getStats = async () => {
-  const res = await fetch('https://7am002ml7h.execute-api.eu-central-1.amazonaws.com/dev/repositories/484750723/stats');
-  const data = await res.json()
-  updateStatsText(data);
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-const initInterval = () => setInterval(async () => {
-  getStats();
-}, POLL_INTERVAL)
+async function launchSequence() {
+  rocketReady();
+  await sleep(2000);
+  rocketFiring();
+  await sleep(2000);
+  rocketLaunch();
+}
+
+const getStats = async () => {
+  const res = await fetch(
+    'https://7am002ml7h.execute-api.eu-central-1.amazonaws.com/dev/repositories/484750723/stats',
+  );
+  const data = await res.json();
+  updateStatsText(data);
+};
+
+const initInterval = () =>
+  setInterval(async () => {
+    getStats();
+  }, POLL_INTERVAL);
 
 const initPixiWorld = () => {
   app.ticker.add((dt) => {
     fadeInStars(dt);
     twinkleStars(dt);
   });
-  
-  launchRocket();
+
+  setTimeout(launchSequence, 1000);
+  setInterval(launchSequence, 12000);
+
   getStats();
   initInterval();
-}
+};
 
 initPixiWorld();
