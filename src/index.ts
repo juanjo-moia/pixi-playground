@@ -6,8 +6,18 @@ import {
   Texture,
   Text,
   TextStyle,
+  Graphics,
 } from 'pixi.js';
+import * as PIXI from 'pixi.js'
 import { gsap } from 'gsap';
+
+import { PixiPlugin } from "gsap/PixiPlugin";
+
+// register the plugin
+gsap.registerPlugin(PixiPlugin);
+
+// give the plugin a reference to the PIXI object
+PixiPlugin.registerPIXI(PIXI);
 
 const POLL_INTERVAL = 5000; // in milliseconds
 const BG_COLOR = 0x1099bb;
@@ -139,12 +149,44 @@ function twinkleStars(_: number) {
 }
 scene.addChild(starSprites);
 
+//skyline
 const skylineTexture = resources.bg_no_fire.texture;
 const skyline = new Sprite(skylineTexture);
 skyline.scale.set(appWidth / skylineTexture.width);
 skyline.y = appHeight - skyline.height;
 scene.addChild(skyline);
 
+//easter egg area
+const hitArea = new Graphics();
+hitArea.interactive = true;
+hitArea.beginFill(0xff0000);
+hitArea.drawCircle(0, 0, 20);
+hitArea.alpha = 0;
+hitArea.x = 425;
+hitArea.y = 245;
+app.stage.addChild(hitArea);
+
+const nightBgAnim = gsap
+  .timeline({ paused: true, defaults: {duration: 0.1} })
+  .to(nightBg, {pixi: { hue: 280}})
+  .to(nightBg, {pixi: { brightness: 3}})
+  .to(nightBg, {pixi: { colorize:"red"}})
+  .to(nightBg, {pixi: { colorMatrixFilter: undefined}}
+  );
+const skyLineAnim = gsap
+.timeline({ paused: true, defaults: {duration: 0.2} })
+.to(skyline, {pixi: {x: 0.5}})
+.to(skyline, {pixi: {x: -0.5}});
+
+//earth (and moon) quake
+hitArea.on('pointerdown', (_) => {
+  nightBgAnim.restart();
+  nightBgAnim.yoyo(true).repeat(10).play()
+  skyLineAnim.restart();
+  skyLineAnim.yoyo(true).repeat(10).play();
+})
+
+//rocket
 const LAUNCH_POINT_Y =
   appHeight - (skylineTexture.height - 1936) * skyline.scale.y;
 const LAUNCH_POINT_X = 1700 * skyline.scale.x;
