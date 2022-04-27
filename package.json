@@ -24,6 +24,7 @@
     "vite": "^2.9.5"
   },
   "dependencies": {
+    "gsap": "^3.10.4",
     "pixi.js": "^6.3.0"
   }
 }
