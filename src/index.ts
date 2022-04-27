@@ -5,6 +5,8 @@ import {
   ParticleContainer,
   Sprite,
   Texture,
+  Text,
+  TextStyle
 } from 'pixi.js';
 
 const WIDTH = 4096 / 4;
@@ -72,6 +74,50 @@ const skyline = new Sprite(skylineTexture);
 skyline.scale.set(WIDTH / skylineTexture.width);
 skyline.y = WIDTH - skyline.height;
 scene.addChild(skyline);
+
+/** statsbox **/
+const textContainer = new Container();
+scene.addChild(textContainer)
+const textHeadline = new Text('MOIA rocktes launched');
+const textHeadlineStyle = new TextStyle({
+  fontFamily: 'Arial',
+  fontSize: 12,
+  fontWeight: 'bold',
+  fill: ['#ffffff', '#ECBF66'], // gradient
+  stroke: '#4a1850',
+  strokeThickness: 2,
+  dropShadow: true,
+  dropShadowColor: '#000000',
+  dropShadowBlur: 4,
+  dropShadowDistance: 2,
+  wordWrap: true,
+  wordWrapWidth: 440,
+  lineJoin: 'round',
+});
+textHeadline.x = 0;
+textHeadline.y = 0;
+textHeadline.style = textHeadlineStyle;
+
+const textSuccess = new Text('Success:');
+const textSuccessStyle = new TextStyle({
+  fontFamily: 'Arial',
+  fontSize: 12,
+  fill: ['#fff']
+})
+textSuccess.x = 0;
+textSuccess.y = 20;
+textSuccess.style = textSuccessStyle;
+
+textContainer.addChild(textHeadline);
+textContainer.addChild(textSuccess);
+textContainer.x = WIDTH - 300;
+textContainer.y = 30;
+
+const updateStatsText = (numberOfSuccess = 0) => {
+  textSuccess.text = `Success: ${numberOfSuccess}`
+}
+
+updateStatsText(1)
 
 /** rocket */
 const rocket = new Sprite(resources.rocket.texture);
