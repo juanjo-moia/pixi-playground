@@ -40,6 +40,8 @@ const resources: any = await new Promise((res) =>
     .add('bg_no_fire', 'assets/bg-no-fire.png')
     .add('bg_fire_medium', 'assets/bg-fire-medium.png')
     .add('bg_fire_max', 'assets/bg-fire-max.png')
+    .add('bg_no_pluto', 'assets/bg-no-pluto.png')
+    .add('pluto', 'assets/pluto.png')
     .add('rocket', 'assets/spritesheet.json')
     .add('star', 'assets/star.png')
     .load((_, r) => res(r)),
@@ -84,7 +86,7 @@ const textStatsStyle = new TextStyle({
   dropShadow: true,
   dropShadowBlur: 2,
   dropShadowColor: '#000000',
-})
+});
 const textSuccess = new Text('Success:');
 textSuccess.x = 0;
 textSuccess.y = 20;
@@ -151,6 +153,7 @@ const LAUNCH_POINT_X = 1700 * skyline.scale.x;
 
 const rocket = new Sprite(resources.rocket.textures.off);
 rocket.anchor.set(0.5);
+rocket.pivot.set(0.5, 0.25);
 rocket.scale = skyline.scale;
 rocket.position.set(LAUNCH_POINT_X, LAUNCH_POINT_Y);
 const rocketShakeTimeline = gsap
@@ -165,6 +168,7 @@ const rocketLaunchTimeline = gsap
   .to(rocket, {
     x: LAUNCH_POINT_X,
     y: LAUNCH_POINT_Y,
+    rotation: 0,
     texture: resources.rocket.textures.on_ground,
     duration: 0,
   })
@@ -177,11 +181,34 @@ const rocketLaunchTimeline = gsap
   .to(skyline, { texture: resources.bg_no_fire.texture, duration: 0 }, 0.7);
 app.stage.addChild(rocket);
 
+const PLUTO_LAUNCH_POINT_X = 0.638 * appWidth;
+const pluto = new Sprite(resources.pluto.texture);
+pluto.scale = skyline.scale;
+pluto.anchor.set(0.5, 1);
+pluto.position.set(PLUTO_LAUNCH_POINT_X, LAUNCH_POINT_Y);
+pluto.visible = false;
+
+app.stage.addChild(pluto);
+
+const plutoLaunchTimeline = gsap
+  .timeline({ paused: true })
+  .to(pluto, {
+    x: PLUTO_LAUNCH_POINT_X,
+    y: LAUNCH_POINT_Y,
+    visible: true,
+    duration: 0,
+  })
+  .to(skyline, { texture: resources.bg_no_pluto.texture, duration: 0 })
+  .to(pluto, { y: -pluto.height, duration: 3 })
+  .to(rocket, { rotation: 0.5 * Math.PI, duration: 4 });
+
 function rocketReady() {
   rocketShakeTimeline.pause();
   rocketShakeTimeline.seek(0);
   rocketLaunchTimeline.pause();
   rocketLaunchTimeline.seek(0);
+  plutoLaunchTimeline.pause();
+  plutoLaunchTimeline.seek(0);
   rocket.texture = resources.rocket.textures.off;
   skyline.texture = resources.bg_no_fire.texture;
 }
@@ -196,6 +223,11 @@ function rocketLaunch() {
   rocketLaunchTimeline.play();
 }
 
+function failedLaunch() {
+  rocketReady();
+  plutoLaunchTimeline.restart();
+}
+
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -208,27 +240,29 @@ async function launchSequence() {
   rocketLaunch();
 }
 
-let lastLaunchStatus: any = null
+let lastLaunchStatus: any = null;
 
 const fetchLastStatusAndUpdate = async () => {
-  const res = await fetch('https://7am002ml7h.execute-api.eu-central-1.amazonaws.com/dev/events')
-  const result = JSON.parse(await res.text())
-  const events = result.events
+  const res = await fetch(
+    'https://7am002ml7h.execute-api.eu-central-1.amazonaws.com/dev/events',
+  );
+  const result = JSON.parse(await res.text());
+  const events = result.events;
 
-  const lastEvent = events[events.length - 1]
-  const lastStatus = lastEvent.status
+  const lastEvent = events[events.length - 1];
+  const lastStatus = lastEvent.status;
 
   if (lastLaunchStatus != lastStatus) {
     if (lastStatus == 'PENDING') {
-      rocketReady()
+      rocketReady();
     } else if (lastStatus == 'SUCCESS') {
-      launchSequence()
+      launchSequence();
     } else {
-      // tipped over...
+      failedLaunch();
     }
-    lastLaunchStatus = lastStatus
+    lastLaunchStatus = lastStatus;
   }
-}
+};
 
 const getStats = async () => {
   const res = await fetch(
@@ -252,8 +286,8 @@ const initPixiWorld = () => {
 
   rocketReady();
 
-  // setTimeout(launchSequence, 1000);
-  // setInterval(launchSequence, 12000);
+  //  setTimeout(launchSequence, 1000);
+  //  setInterval(launchSequence, 12000);
 
   getStats();
   initInterval();
