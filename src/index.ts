@@ -198,6 +198,8 @@ async function launchSequence() {
   rocketLaunch();
 }
 
+let lastLaunchStatus: any = null
+
 const fetchLastStatusAndUpdate = async () => {
   const res = await fetch('https://7am002ml7h.execute-api.eu-central-1.amazonaws.com/dev/events')
   const result = JSON.parse(await res.text())
@@ -207,7 +209,16 @@ const fetchLastStatusAndUpdate = async () => {
   const lastEvent = events[0]
   const lastStatus = lastEvent.status
 
-  console.log(lastStatus)
+  if (lastLaunchStatus != lastStatus) {
+    if (lastStatus == 'PENDING') {
+      rocketReady()
+    } else if (lastStatus == 'SUCCESS') {
+      launchSequence()
+    } else {
+      // tipped over...
+    }
+    lastLaunchStatus = lastStatus
+  }
 }
 
 const getStats = async () => {
@@ -230,8 +241,10 @@ const initPixiWorld = () => {
     twinkleStars(dt);
   });
 
-  setTimeout(launchSequence, 1000);
-  setInterval(launchSequence, 12000);
+  rocketReady();
+
+  // setTimeout(launchSequence, 1000);
+  // setInterval(launchSequence, 12000);
 
   getStats();
   initInterval();
