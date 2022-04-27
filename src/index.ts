@@ -6,6 +6,7 @@ import {
   Sprite,
   Texture,
 } from 'pixi.js';
+import { gsap } from 'gsap';
 
 const WIDTH = 4096 / 4;
 const HEIGHT = 4096 / 4;
@@ -109,14 +110,14 @@ function launchRocket() {
 
 launchRocket();
 
-window.setInterval(() => {
-  fetch('https://api.rockets.dev.moia-group.io/484750723/stats').then((res) => {
-    console.log(res);
-  })
-}, POLL_INTERVAL)
-
 app.ticker.add((dt) => {
-  flyRocket(dt);
   fadeInStars(dt);
   twinkleStars(dt);
 });
+
+setInterval(async () => {
+  const res = await fetch('https://7am002ml7h.execute-api.eu-central-1.amazonaws.com/dev/repositories/484750723/stats');
+  const text = await res.text()
+
+  console.log(JSON.parse(text));
+}, POLL_INTERVAL)
