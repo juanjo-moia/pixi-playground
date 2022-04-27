@@ -9,18 +9,18 @@ import {
 } from 'pixi.js';
 import { gsap } from 'gsap';
 
-const WIDTH = 4096 / 4;
-const HEIGHT = 4096 / 4;
+const POLL_INTERVAL = 5000; // in milliseconds
 const BG_COLOR = 0x1099bb;
 
-const POLL_INTERVAL = 5000; // in milliseconds
+const appWidth = window.innerWidth  / window.devicePixelRatio;
+const appHeight = window.innerHeight / window.devicePixelRatio;
 
 const app = new Application({
-  width: WIDTH,
-  height: HEIGHT,
+  width: appWidth,
+  height: appHeight,
+  sharedLoader: true,
   backgroundColor: BG_COLOR,
   resolution: window.devicePixelRatio || 1,
-  sharedLoader: true,
 });
 
 // We stop Pixi ticker using stop() function because autoStart = false does NOT stop the shared ticker:
@@ -50,8 +50,8 @@ app.stage.addChild(scene);
 
 const nightBg = new Sprite(Texture.WHITE);
 nightBg.tint = 0x02163b;
-nightBg.width = WIDTH;
-nightBg.height = HEIGHT;
+nightBg.width = app.screen.width;
+nightBg.height = app.screen.height;
 scene.addChild(nightBg);
 
 /** statsbox **/
@@ -61,7 +61,7 @@ const textHeadlineStyle = new TextStyle({
   fontFamily: 'Arial',
   fontSize: 12,
   fontWeight: 'bold',
-  fill: ['#ffffff', '#ECBF66'], // gradient
+  fill: ['#ffffff', '#ECBF66'],
   stroke: '#4a1850',
   strokeThickness: 2,
   dropShadow: true,
@@ -80,8 +80,11 @@ textHeadline.style = textHeadlineStyle;
 const textStatsStyle = new TextStyle({
   fontFamily: 'Arial',
   fontSize: 10,
-  fill: ['#fff'],
-});
+  fill: ['#ECBF66'],
+  dropShadow: true,
+  dropShadowBlur: 2,
+  dropShadowColor: '#000000',
+})
 const textSuccess = new Text('Success:');
 textSuccess.x = 0;
 textSuccess.y = 20;
@@ -94,7 +97,7 @@ textFailure.style = textStatsStyle;
 textContainer.addChild(textHeadline);
 textContainer.addChild(textSuccess);
 textContainer.addChild(textFailure);
-textContainer.x = WIDTH - 300;
+textContainer.x = appWidth - 200;
 textContainer.y = 30;
 
 const updateStatsText = ({
@@ -121,8 +124,8 @@ for (let i = 0; i < COUNT_STARS; i++) {
   const star = new Sprite(resources.star.texture);
   star.anchor.set(0.5);
   star.scale.set(Math.random() * 0.02);
-  star.x = Math.random() * WIDTH;
-  star.y = Math.random() * HEIGHT;
+  star.x = Math.random() * appWidth;
+  star.y = Math.random() * appHeight;
   star.alpha = Math.random();
   starSprites.addChild(star);
 }
@@ -138,12 +141,12 @@ scene.addChild(starSprites);
 
 const skylineTexture = resources.bg_no_fire.texture;
 const skyline = new Sprite(skylineTexture);
-skyline.scale.set(WIDTH / skylineTexture.width);
-skyline.y = WIDTH - skyline.height;
+skyline.scale.set(appWidth / skylineTexture.width);
+skyline.y = appHeight - skyline.height;
 scene.addChild(skyline);
 
 const LAUNCH_POINT_Y =
-  HEIGHT - (skylineTexture.height - 1936) * skyline.scale.y;
+  appHeight - (skylineTexture.height - 1936) * skyline.scale.y;
 const LAUNCH_POINT_X = 1700 * skyline.scale.x;
 
 const rocket = new Sprite(resources.rocket.textures.off);
